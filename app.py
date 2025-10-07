@@ -1,24 +1,27 @@
 import streamlit as st
 from components.layout import setup_page_config, apply_custom_css
 from components.sidebar import render_sidebar
-from components.viz_astinet import render_astinet_visualization
-from components.viz_other import render_other_visualization
+from components.viz_piechart import render_piechart_visualization
+from components.viz_table import render_table_visualization
 import pandas as pd
 
 # Setup page
 setup_page_config()
 apply_custom_css()
 
-# Fungsi untuk load data
+# Fungsi untuk load data dari Google Sheets
 @st.cache_data(ttl=300)
-def load_data(url):
-    """Load data dari Google Sheets dan clean data"""
+def load_data(data_source):
+    """Load data dari Google Sheets berdasarkan DPS/DGS"""
     try:
-        if '/edit' in url:
-            sheet_id = url.split('/d/')[1].split('/')[0]
-            csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
-        else:
-            csv_url = url
+        # Mapping DPS/DGS ke spreadsheet URL yang berbeda
+        sheet_configs = {
+            "DPS": "1K-596RSSwJWO1HiAwOBG2gnMSUtrEhvnKIdH8P4w8e4",
+            "DGS": "1QazP2uYyoPNZU8qfJuAevHFyJP0SmaSwYSc7JXTchCo"
+        }
+        
+        sheet_id = sheet_configs.get(data_source)
+        csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
         
         df = pd.read_csv(csv_url)
         
@@ -29,9 +32,8 @@ def load_data(url):
         if 'NILAI' in df.columns:
             df['NILAI'] = pd.to_numeric(df['NILAI'], errors='coerce')
         
-        # Clean % Results - PERBAIKAN UTAMA DI SINI
+        # Clean % Results
         if '% Results' in df.columns:
-            # Hapus karakter % dan konversi ke numeric
             df['% Results'] = df['% Results'].astype(str).str.replace('%', '').str.strip()
             df['% Results'] = pd.to_numeric(df['% Results'], errors='coerce')
         
@@ -45,85 +47,87 @@ def load_data(url):
         st.error(f"Error loading data: {str(e)}")
         return None
 
-# URL Google Sheets
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1QazP2uYyoPNZU8qfJuAevHFyJP0SmaSwYSc7JXTchCo/edit?usp=sharing"
+# Initialize session state untuk filter data source
+if 'data_source' not in st.session_state:
+    st.session_state.data_source = "DPS"
 
-# Load data
-with st.spinner("⏳ Memuat data..."):
-    df = load_data(SHEET_URL)
+# Render sidebar dan dapatkan selected_witel
+selected_witel = render_sidebar()
+
+# Header dengan Button Group Filter - HIERARKI H1 BESAR MERAH
+col_title, col_spacer, col_filter = st.columns([2, 1, 1])
+
+with col_title:
+    st.markdown("""
+    <h1 style='margin: 0; color: #ea1d25; font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em;'>
+        Dashboard High Five - RLEGS TR3
+    </h1>
+    """, unsafe_allow_html=True)
+
+with col_filter:
+    # Button Group untuk filter DPS/DGS
+    col_dps, col_dgs = st.columns(2)
+    
+    with col_dps:
+        if st.button(
+            "DPS",
+            key="btn_dps",
+            use_container_width=True,
+            type="primary" if st.session_state.data_source == "DPS" else "secondary"
+        ):
+            st.session_state.data_source = "DPS"
+            st.rerun()
+    
+    with col_dgs:
+        if st.button(
+            "DGS",
+            key="btn_dgs",
+            use_container_width=True,
+            type="primary" if st.session_state.data_source == "DGS" else "secondary"
+        ):
+            st.session_state.data_source = "DGS"
+            st.rerun()
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# Load data berdasarkan filter yang dipilih
+with st.spinner(f"⏳ Memuat data {st.session_state.data_source}..."):
+    df = load_data(st.session_state.data_source)
 
 if df is not None:
-    # Render sidebar dan dapatkan filter
-    selected_witel = render_sidebar()
-    
-    # Header
-    st.markdown("<h1 style='text-align: center;'>🚀 DASHBOARD MONITORING HIGH FIVE</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #757575; font-size: 18px; margin-bottom: 40px;'>Monitor performa <b>Astinet Bundling DDoS</b> secara real-time</p>", unsafe_allow_html=True)
-    
     # Cek apakah witel sudah dipilih
     if selected_witel == "-- Pilih Witel --":
-        # Tampilan sebelum filter
+        # Tampilan sebelum filter - REDESIGN LEBIH SUBTLE
         st.markdown("""
-        <div style='background: linear-gradient(135deg, #E60012 0%, #C4000F 100%); 
-                    color: white; padding: 60px 40px; border-radius: 20px; 
-                    text-align: center; box-shadow: 0 8px 32px rgba(230, 0, 18, 0.3);
+        <div style='background: linear-gradient(135deg, #f4f6f8 0%, #e1e7ef 100%); 
+                    color: #2d3748; padding: 80px 60px; border-radius: 24px; 
+                    text-align: center; 
+                    border: 2px solid #cbd5e0;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
                     margin: 40px 0;'>
-            <h2 style='color: white; margin: 0; font-size: 32px;'>👈 Silakan Pilih WITEL</h2>
-            <p style='color: white; margin: 20px 0 0 0; font-size: 18px; opacity: 0.95;'>
-                Pilih WITEL dari sidebar untuk menampilkan visualisasi data
+            <div style='font-size: 64px; margin-bottom: 24px; opacity: 0.4;'>📍</div>
+            <h2 style='color: #2d3748; margin: 0 0 16px 0; font-size: 2rem; font-weight: 700;'>
+                Pilih WITEL untuk Memulai
+            </h2>
+            <p style='color: #6b7280; margin: 0; font-size: 1.125rem; font-weight: 500;'>
+                Gunakan sidebar di sebelah kiri untuk memilih WITEL yang ingin Anda analisis
             </p>
+            <div style='margin-top: 32px;'>
+                <div style='display: inline-block; background: white; padding: 12px 28px; 
+                            border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
+                    <span style='color: #ea1d25; font-size: 0.875rem; font-weight: 700; 
+                                letter-spacing: 0.5px;'>
+                        👈 PILIH DARI SIDEBAR
+                    </span>
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Preview data dengan card design
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown("""
-            <div style='background: white; padding: 30px; border-radius: 16px; 
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-left: 6px solid #E60012;'>
-                <div style='color: #757575; font-size: 14px; font-weight: 600; margin-bottom: 10px;'>
-                    📋 TOTAL RECORDS
-                </div>
-                <div style='color: #E60012; font-size: 42px; font-weight: 700;'>
-                    """ + str(len(df)) + """
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            total_witel = df['WITEL'].nunique() if 'WITEL' in df.columns else 0
-            st.markdown("""
-            <div style='background: white; padding: 30px; border-radius: 16px; 
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-left: 6px solid #757575;'>
-                <div style='color: #757575; font-size: 14px; font-weight: 600; margin-bottom: 10px;'>
-                    📍 TOTAL WITEL
-                </div>
-                <div style='color: #757575; font-size: 42px; font-weight: 700;'>
-                    """ + str(total_witel) + """
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            total_products = df['PRODUCT HIGH FIVE'].nunique() if 'PRODUCT HIGH FIVE' in df.columns else 0
-            st.markdown("""
-            <div style='background: white; padding: 30px; border-radius: 16px; 
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-left: 6px solid #E60012;'>
-                <div style='color: #757575; font-size: 14px; font-weight: 600; margin-bottom: 10px;'>
-                    📦 TOTAL PRODUCTS
-                </div>
-                <div style='color: #E60012; font-size: 42px; font-weight: 700;'>
-                    """ + str(total_products) + """
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
+        # Preview data
         st.markdown("<br><br>", unsafe_allow_html=True)
-        st.markdown("<h3 style='color: #757575;'>📊 Preview Data</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #2d3748; font-size: 1.25rem; font-weight: 700;'>Preview Data</h3>", unsafe_allow_html=True)
         st.dataframe(df.head(10), use_container_width=True, height=400)
-        
     else:
         # Filter data berdasarkan witel
         filtered_df = df[df['WITEL'] == selected_witel].copy()
@@ -131,25 +135,25 @@ if df is not None:
         if len(filtered_df) == 0:
             st.warning(f"⚠️ Tidak ada data untuk WITEL: {selected_witel}")
         else:
-            # BAGIAN ATAS: Visualisasi Astinet Bundling DDoS
-            render_astinet_visualization(filtered_df, selected_witel)
+            # Section 1: Monitoring Produk Witel (Pie Charts)
+            render_piechart_visualization(filtered_df, selected_witel)
             
             # Divider
             st.markdown("<br><br>", unsafe_allow_html=True)
-            st.markdown("<hr style='border: 2px solid #E6E6E6; margin: 40px 0;'>", unsafe_allow_html=True)
+            st.markdown("<hr style='border: 2px solid #e1e7ef; margin: 40px 0;'>", unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # BAGIAN BAWAH: Visualisasi Lainnya (extensible)
-            render_other_visualization(filtered_df, selected_witel)
+            # Section 2: Progress Account Manager [WITEL]
+            render_table_visualization(filtered_df, selected_witel)
 
 else:
     st.error("❌ Gagal memuat data. Pastikan Google Sheets sudah di-publish sebagai CSV.")
 
 # Footer
-st.markdown("<br><br><hr style='border: 1px solid #E6E6E6;'>", unsafe_allow_html=True)
+st.markdown("<br><br><hr style='border: 1px solid #e1e7ef;'>", unsafe_allow_html=True)
 st.markdown("""
-<p style='text-align: center; color: #757575; padding: 20px 0;'>
-    Dashboard Monitoring High Five | Powered by <b style='color: #E60012;'>Telkom Indonesia</b> 
+<p style='text-align: center; color: #6b7280; padding: 20px 0;'>
+    Dashboard High Five - RLEGS TR3 | Powered by <b style='color: #ea1d25;'>Telkom Indonesia</b> 
     <span style='margin: 0 10px;'>•</span> © 2024
 </p>
 """, unsafe_allow_html=True)

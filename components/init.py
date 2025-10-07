@@ -10,7 +10,7 @@ __author__ = "Telkom Indonesia"
 # Import all components for easier access
 from .layout import setup_page_config, apply_custom_css
 from .sidebar import render_sidebar
-from .viz_astinet import render_astinet_visualization
+from .viz_piechart import render_astinet_visualization
 from .viz_other import render_other_visualization
 
 __all__ = [
