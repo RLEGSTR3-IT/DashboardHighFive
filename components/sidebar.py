@@ -1,4 +1,12 @@
+import base64, io
+from pathlib import Path
+
 import streamlit as st
+from PIL import Image, ImageFile
+
+# Amanin pembacaan gambar besar
+Image.MAX_IMAGE_PIXELS = None
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # List Witel
 WITEL_LIST = [
@@ -9,104 +17,84 @@ WITEL_LIST = [
     "BALI",
     "NUSA TENGGARA",
     "JATIM TIMUR",
-    "SOLO JATENG TIMUR"
+    "SOLO JATENG TIMUR",
 ]
 
-def render_sidebar():
-    """Render sidebar dengan filter WITEL"""
-    
-    with st.sidebar:
-        # Logo/Header section
-        st.markdown("""
-        <div style='text-align: center; padding: 20px 0 30px 0;'>
-            <h1 style='color: white; font-size: 28px; margin: 0; font-weight: 800; 
-                       letter-spacing: -0.5px;'>
-                🚀 HIGH FIVE
-            </h1>
+def _safe_logo(img_path: Path, width_px: int = 260, top_gap: int = 50):
+    """
+    Render logo: center, jarak dari atas 'top_gap' px, lebar 'width_px' px.
+    Resize di runtime + fallback base64 agar lolos limit Pillow/versi Streamlit.
+    """
+    try:
+        with Image.open(img_path) as img:
+            img = img.convert("RGBA")
+            if img.width > width_px:
+                r = width_px / float(img.width)
+                img = img.resize((width_px, int(img.height * r)), Image.Resampling.LANCZOS)
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            b64 = base64.b64encode(buf.getvalue()).decode()
+    except Exception:
+        # fallback baca langsung file
+        b64 = base64.b64encode(open(img_path, "rb").read()).decode()
+
+    st.markdown(
+        f"""
+        <div style="text-align:center; margin-top:{top_gap}px;">
+            <img src="data:image/png;base64,{b64}" style="width:{width_px}px; height:auto;" />
         </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div style='border-top: 2px solid rgba(255,255,255,0.3); 
-                    margin: 0 -20px 30px -20px;'></div>
-        """, unsafe_allow_html=True)
-        
-        # Filter Witel (tanpa header berlebihan)
-        st.markdown("""
-        <p style='color: white; font-size: 13px; font-weight: 600; 
-                  margin-bottom: 8px; letter-spacing: 0.5px;'>
-            📍 PILIH WITEL
-        </p>
-        """, unsafe_allow_html=True)
-        
+        """,
+        unsafe_allow_html=True,
+    )
+
+def render_sidebar():
+    """Render sidebar: logo + filter WITEL + tombol refresh"""
+    with st.sidebar:
+        # 1) LOGO
+        logo_path = Path("assets/telkom.png")
+        if logo_path.exists():
+            _safe_logo(logo_path, width_px=260, top_gap=50)
+        else:
+            st.markdown(
+                """
+                <div style='text-align:center; margin-top:50px;'>
+                  <h2 style='color:#fff; margin:0;'>HIGH FIVE</h2>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # Garis pembatas
+        st.markdown(
+            """
+            <div style='border-top: 2px solid rgba(255,255,255,0.3);
+                        margin: 30px -20px 30px -20px;'></div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # 2) FILTER WITEL
+        st.markdown(
+            """
+            <p style='color:#fff; font-size:13px; font-weight:700; margin-bottom:8px; letter-spacing:.5px;'>
+              📍 PILIH WITEL
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
+
         selected_witel = st.selectbox(
             "witel_select",
             options=["-- Pilih Witel --"] + WITEL_LIST,
             key="witel_filter",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
         )
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Refresh button
+
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+
+        # 3) REFRESH
         if st.button("🔄 REFRESH DATA", use_container_width=True, key="refresh_btn"):
             st.cache_data.clear()
             st.rerun()
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Divider
-        st.markdown("""
-        <div style='border-top: 2px solid rgba(255,255,255,0.3); 
-                    margin: 30px -20px;'></div>
-        """, unsafe_allow_html=True)
-        
-        # Info section (lebih ringkas)
-        st.markdown("""
-        <div style='background: rgba(255,255,255,0.1); padding: 20px; 
-                    border-radius: 12px; backdrop-filter: blur(10px);
-                    border: 2px solid rgba(255,255,255,0.2);'>
-            <div style='display: flex; align-items: center; margin-bottom: 12px;'>
-                <span style='font-size: 24px; margin-right: 12px;'>💡</span>
-                <span style='color: white; font-size: 14px; font-weight: 700; 
-                             letter-spacing: 0.5px;'>CARA PENGGUNAAN</span>
-            </div>
-            <div style='color: rgba(255,255,255,0.95); font-size: 13px; 
-                        line-height: 1.8; margin-left: 36px;'>
-                <div style='margin-bottom: 8px;'>
-                    <span style='color: white; font-weight: 700;'>1.</span> 
-                    Pilih DPS atau DGS di header
-                </div>
-                <div style='margin-bottom: 8px;'>
-                    <span style='color: white; font-weight: 700;'>2.</span> 
-                    Pilih WITEL dari dropdown
-                </div>
-                <div style='margin-bottom: 8px;'>
-                    <span style='color: white; font-weight: 700;'>3.</span> 
-                    Visualisasi muncul otomatis
-                </div>
-                <div>
-                    <span style='color: white; font-weight: 700;'>4.</span> 
-                    Data refresh setiap 5 menit
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Footer
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        st.markdown("""
-        <div style='text-align: center; padding-top: 20px; 
-                    border-top: 2px solid rgba(255,255,255,0.2);'>
-            <p style='color: rgba(255,255,255,0.7); font-size: 11px; 
-                      margin: 0; letter-spacing: 0.5px;'>
-                © 2024 Telkom Indonesia
-            </p>
-            <p style='color: rgba(255,255,255,0.5); font-size: 10px; 
-                      margin: 4px 0 0 0;'>
-                v1.0.0 • Dashboard HighFive
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    return selected_witel
+
+        return selected_witel

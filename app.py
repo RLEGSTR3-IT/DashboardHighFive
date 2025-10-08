@@ -2,8 +2,14 @@ import streamlit as st
 from components.layout import setup_page_config, apply_custom_css
 from components.sidebar import render_sidebar
 from components.viz_piechart import render_piechart_visualization
-from components.viz_table import render_table_visualization
 import pandas as pd
+
+# Force reload module untuk development
+import importlib
+import sys
+if 'components.viz_table' in sys.modules:
+    importlib.reload(sys.modules['components.viz_table'])
+from components.viz_table import render_table_visualization
 
 # Setup page
 setup_page_config()
@@ -143,7 +149,7 @@ if df is not None:
             st.markdown("<hr style='border: 2px solid #e1e7ef; margin: 40px 0;'>", unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # Section 2: Progress Account Manager [WITEL]
+            # Section 2: Progress Account Manager [WITEL] - MENGGUNAKAN KOMPONEN BARU
             render_table_visualization(filtered_df, selected_witel)
 
 else:
@@ -154,6 +160,6 @@ st.markdown("<br><br><hr style='border: 1px solid #e1e7ef;'>", unsafe_allow_html
 st.markdown("""
 <p style='text-align: center; color: #6b7280; padding: 20px 0;'>
     Dashboard High Five - RLEGS TR3 | Powered by <b style='color: #ea1d25;'>Telkom Indonesia</b> 
-    <span style='margin: 0 10px;'>•</span> © 2024
+    <span style='margin: 0 10px;'>•</span> © 2025
 </p>
 """, unsafe_allow_html=True)

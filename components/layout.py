@@ -3,8 +3,7 @@ import streamlit as st
 def setup_page_config():
     """Setup konfigurasi halaman Streamlit"""
     st.set_page_config(
-        page_title="Dashboard High Five - RLEGS TR3",
-        page_icon="🚀",
+        page_title="HIGH FIVE - RLEGS TR3",
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -24,7 +23,7 @@ def apply_custom_css():
             
             --white: #ffffff;
             --gray-50: #fafbfc;
-            --gray-100: #f4f6f8;
+            --gray-100: #f2f2f2;
             --gray-200: #e1e7ef;
             --gray-300: #cbd5e0;
             --gray-400: #9ca3af;
@@ -56,7 +55,7 @@ def apply_custom_css():
         }
         
         .main {
-            background: #f5f7fa;
+            background: #f2f2f2;
             padding: 16px 32px !important;
         }
         
@@ -92,6 +91,34 @@ def apply_custom_css():
         [data-testid="stSidebar"] .stSelectbox > div > div:hover {
             border-color: rgba(255, 255, 255, 0.5);
             background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* ===== SIDEBAR COLLAPSE BUTTON - WHITE ICON ===== */
+        [data-testid="collapsedControl"] {
+            color: white !important;
+        }
+        
+        [data-testid="collapsedControl"] svg {
+            fill: white !important;
+            stroke: white !important;
+        }
+        
+        button[kind="header"] {
+            color: white !important;
+        }
+        
+        button[kind="header"] svg {
+            fill: white !important;
+        }
+        
+        /* Minimize icon di sidebar */
+        [data-testid="stSidebar"] button[kind="header"] {
+            color: white !important;
+        }
+        
+        [data-testid="stSidebar"] button[kind="header"] svg {
+            fill: white !important;
+            stroke: white !important;
         }
         
         /* ===== TYPOGRAPHY ===== */
