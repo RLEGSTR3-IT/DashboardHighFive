@@ -22,10 +22,10 @@ def apply_custom_css():
             --telkom-red-subtle: rgba(234, 29, 37, 0.06);
             
             --white: #ffffff;
-            --gray-50: #fafbfc;
-            --gray-100: #f2f2f2;
-            --gray-200: #e1e7ef;
-            --gray-300: #cbd5e0;
+            --gray-50: #FAFAFA;
+            --gray-100: #f5f5f5;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
             --gray-400: #9ca3af;
             --gray-500: #6b7280;
             --gray-600: #4a5568;
@@ -55,7 +55,7 @@ def apply_custom_css():
         }
         
         .main {
-            background: #f2f2f2;
+            background: #FAFAFA !important;
             padding: 16px 32px !important;
         }
         
@@ -256,6 +256,27 @@ def apply_custom_css():
         
         .dashboard-card {
             animation: slideUp 0.4s ease-out;
+        }
+        
+        /* ===== CUSTOM EXPANDER STYLING ===== */
+        .streamlit-expanderHeader {
+            background: linear-gradient(135deg, #ea1d25 0%, #d61921 100%) !important;
+            color: white !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+            padding: 16px 20px !important;
+            border: none !important;
+        }
+        
+        .streamlit-expanderHeader:hover {
+            background: linear-gradient(135deg, #d61921 0%, #c41e24 100%) !important;
+        }
+        
+        .streamlit-expanderContent {
+            border: 1px solid #e5e7eb !important;
+            border-top: none !important;
+            border-radius: 0 0 12px 12px !important;
+            background: white !important;
         }
     </style>
     """, unsafe_allow_html=True)
